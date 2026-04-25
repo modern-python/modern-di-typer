@@ -1,10 +1,11 @@
 import typing
 
+import modern_di
 import typer
 from typer.testing import CliRunner
 
 import modern_di_typer
-from modern_di_typer import FromDI, build_command_container, inject
+from modern_di_typer import FromDI, inject
 from tests.dependencies import Dependencies, DependentCreator, SimpleCreator
 
 
@@ -47,9 +48,8 @@ def test_action_scope(app: typer.Typer) -> None:
 
     @app.command()
     @inject
-    def cmd(ctx: typer.Context) -> None:
-        with build_command_container(ctx) as cmd_container:
-            action_container = cmd_container.build_child_container()
+    def cmd(container: typing.Annotated[modern_di.Container, FromDI(modern_di.Container)]) -> None:
+        with container.build_child_container() as action_container:
             instance = action_container.resolve_provider(Dependencies.action_factory)
             assert isinstance(instance, DependentCreator)
 
