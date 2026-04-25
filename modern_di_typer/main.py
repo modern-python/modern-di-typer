@@ -35,7 +35,7 @@ def fetch_di_container(ctx: typer.Context) -> Container:
 
 
 @contextlib.contextmanager
-def build_command_container(ctx: typer.Context) -> typing.Iterator[Container]:
+def _build_command_container(ctx: typer.Context) -> typing.Iterator[Container]:
     container = fetch_di_container(ctx).build_child_container(scope=Scope.REQUEST)
     try:
         yield container
@@ -108,7 +108,7 @@ def inject(func: typing.Callable[..., T]) -> typing.Callable[..., T]:
         if not di_params:
             return func(**arguments)
 
-        with build_command_container(ctx) as cmd_container:
+        with _build_command_container(ctx) as cmd_container:
             arguments.update(_resolve_di_params(cmd_container, di_params))
             return func(**arguments)
 
