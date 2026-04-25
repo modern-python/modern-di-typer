@@ -11,8 +11,6 @@ from modern_di import Container, Scope, providers
 T_co = typing.TypeVar("T_co", covariant=True)
 T = typing.TypeVar("T")
 
-_container: Container | None = None
-
 
 @dataclasses.dataclass(slots=True, frozen=True)
 class _FromDI(typing.Generic[T_co]):
@@ -23,9 +21,12 @@ def FromDI(provider: providers.AbstractProvider[T_co] | type[T_co]) -> T_co:  # 
     return typing.cast(T_co, _FromDI(provider))
 
 
-def setup_di(_app: typer.Typer, container: Container) -> Container:
-    global _container  # noqa: PLW0603
-    _container = container
+def setup_di(app: typer.Typer, container: Container) -> Container:
+    if not app.info.context_settings:
+        app.info.context_settings = {}
+    obj = app.info.context_settings.get("obj") or {}
+    obj["di_container"] = container
+    app.info.context_settings["obj"] = obj
     return container
 
 
@@ -103,10 +104,6 @@ def inject(func: typing.Callable[..., T]) -> typing.Callable[..., T]:
         ctx: typer.Context = arguments[ctx_key]
         if added_ctx:
             del arguments[ctx_key]
-
-        if ctx.obj is None:
-            ctx.obj = {}
-        ctx.obj["di_container"] = _container
 
         if not di_params:
             return func(**arguments)
