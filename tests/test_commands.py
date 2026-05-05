@@ -1,5 +1,6 @@
 import typing
 
+import click
 import modern_di
 import typer
 from typer.testing import CliRunner
@@ -69,3 +70,82 @@ def test_fetch_di_container(app: typer.Typer) -> None:
 
     result = runner.invoke(app)
     assert result.exit_code == 0
+
+
+def test_command_with_positional_argument(app: typer.Typer) -> None:
+    runner = CliRunner()
+    received: dict[str, typing.Any] = {}
+
+    @app.command()
+    @inject
+    def cmd(name: str, instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)]) -> None:
+        received["name"] = name
+        received["instance"] = instance
+
+    result = runner.invoke(app, ["alice"])
+    assert result.exit_code == 0, result.output
+    assert received["name"] == "alice"
+    assert isinstance(received["instance"], SimpleCreator)
+
+
+def test_command_with_option(app: typer.Typer) -> None:
+    runner = CliRunner()
+    received: dict[str, typing.Any] = {}
+
+    @app.command()
+    @inject
+    def cmd(
+        instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)],
+        count: int = typer.Option(1, "--count"),
+    ) -> None:
+        received["count"] = count
+        received["instance"] = instance
+
+    result = runner.invoke(app, ["--count", "5"])
+    assert result.exit_code == 0, result.output
+    assert received["count"] == 5  # noqa: PLR2004
+    assert isinstance(received["instance"], SimpleCreator)
+
+
+def test_command_with_option_default(app: typer.Typer) -> None:
+    runner = CliRunner()
+    received: dict[str, typing.Any] = {}
+
+    @app.command()
+    @inject
+    def cmd(
+        instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)],
+        count: int = typer.Option(7, "--count"),
+    ) -> None:
+        received["count"] = count
+        received["instance"] = instance
+
+    result = runner.invoke(app)
+    assert result.exit_code == 0, result.output
+    assert received["count"] == 7  # noqa: PLR2004
+    assert isinstance(received["instance"], SimpleCreator)
+
+
+def test_command_with_arg_option_and_explicit_context(app: typer.Typer) -> None:
+    runner = CliRunner()
+    received: dict[str, typing.Any] = {}
+
+    @app.command()
+    @inject
+    def cmd(
+        ctx: typer.Context,
+        name: str,
+        instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)],
+        verbose: bool = typer.Option(False, "--verbose"),
+    ) -> None:
+        received["ctx"] = ctx
+        received["name"] = name
+        received["verbose"] = verbose
+        received["instance"] = instance
+
+    result = runner.invoke(app, ["bob", "--verbose"])
+    assert result.exit_code == 0, result.output
+    assert received["name"] == "bob"
+    assert received["verbose"] is True
+    assert isinstance(received["ctx"], click.Context)
+    assert isinstance(received["instance"], SimpleCreator)
