@@ -92,7 +92,7 @@ def inject(func: typing.Callable[..., T]) -> typing.Callable[..., T]:
             inspect.Parameter(ctx_param_name, kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=typer.Context),
         )
 
-    ctx_key: str = ctx_param_name  # ty: ignore[invalid-assignment]
+    ctx_key: str = ctx_param_name
     new_sig = sig.replace(parameters=new_params)
 
     @functools.wraps(func)
