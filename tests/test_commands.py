@@ -1,6 +1,5 @@
 import typing
 
-import click
 import modern_di
 import typer
 from typer.testing import CliRunner
@@ -147,5 +146,5 @@ def test_command_with_arg_option_and_explicit_context(app: typer.Typer) -> None:
     assert result.exit_code == 0, result.output
     assert received["name"] == "bob"
     assert received["verbose"] is True
-    assert isinstance(received["ctx"], click.Context)
+    assert isinstance(received["ctx"], typer._click.Context)  # noqa: SLF001
     assert isinstance(received["instance"], SimpleCreator)
