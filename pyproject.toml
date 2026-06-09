@@ -19,7 +19,7 @@ dependencies = ["typer>=0.9,<1", "modern-di>=2,<3"]
 version = "0"
 
 [project.urls]
-repository = "https://github.com/modern-python/modern-di-fastapi"
+repository = "https://github.com/modern-python/modern-di-typer"
 docs = "https://modern-di.modern-python.org"
 
 [dependency-groups]
