@@ -7,7 +7,7 @@
 
 Integration of [Modern-DI](https://github.com/modern-python/modern-di) to [Typer](https://github.com/fastapi/typer)
 
-## 📚 [Documentation](https://modern-di.readthedocs.io)
+## 📚 [Documentation](https://modern-di.modern-python.org)
 
 ## Installation
 
