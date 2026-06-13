@@ -1,13 +1,17 @@
-"Modern-DI-Typer"
-==
-[![Test Coverage](https://codecov.io/gh/modern-python/modern-di-typer/branch/main/graph/badge.svg)](https://codecov.io/gh/modern-python/modern-di-typer)
-[![Supported versions](https://img.shields.io/pypi/pyversions/modern-di-typer.svg)](https://pypi.python.org/pypi/modern-di-typer)
-[![downloads](https://img.shields.io/pypi/dm/modern-di-typer.svg)](https://pypistats.org/packages/modern-di-typer)
+# modern-di-typer
+
+[![PyPI version](https://img.shields.io/pypi/v/modern-di-typer.svg)](https://pypi.org/project/modern-di-typer/)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/modern-di-typer.svg)](https://pypi.org/project/modern-di-typer/)
+[![Downloads](https://img.shields.io/pypi/dm/modern-di-typer.svg)](https://pypistats.org/packages/modern-di-typer)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/modern-python/modern-di-typer/actions/workflows/ci.yml)
+[![CI](https://github.com/modern-python/modern-di-typer/actions/workflows/ci.yml/badge.svg)](https://github.com/modern-python/modern-di-typer/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/modern-python/modern-di-typer.svg)](https://github.com/modern-python/modern-di-typer/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/modern-python/modern-di-typer)](https://github.com/modern-python/modern-di-typer/stargazers)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![ty](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ty/main/assets/badge/v0.json)](https://github.com/astral-sh/ty)
 
 Integration of [Modern-DI](https://github.com/modern-python/modern-di) to [Typer](https://github.com/fastapi/typer)
-
-## 📚 [Documentation](https://modern-di.modern-python.org)
 
 ## Installation
 
@@ -80,8 +84,11 @@ def my_command(
 - `FromDI(provider)` — marker used in `Annotated[T, FromDI(...)]`; accepts a provider instance or a type
 - `fetch_di_container(ctx)` — returns the app-scoped container from `ctx.obj`
 
+## 📦 [PyPI](https://pypi.org/project/modern-di-typer)
+
+## 📝 [License](LICENSE)
+
 ## Part of `modern-python`
 
 Browse the full list of templates and libraries in
-[`modern-python`](https://github.com/modern-python) — see the org profile for the
-categorized index.
+[`modern-python`](https://github.com/modern-python) — see the org profile for the categorized index.
