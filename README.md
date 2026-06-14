@@ -11,12 +11,12 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![ty](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ty/main/assets/badge/v0.json)](https://github.com/astral-sh/ty)
 
-Integration of [Modern-DI](https://github.com/modern-python/modern-di) to [Typer](https://github.com/fastapi/typer)
+[Modern-DI](https://github.com/modern-python/modern-di) integration for [Typer](https://typer.tiangolo.com).
 
 ## Installation
 
-```
-pip install modern-di-typer
+```bash
+uv add modern-di-typer      # or: pip install modern-di-typer
 ```
 
 ## Usage
