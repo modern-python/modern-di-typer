@@ -84,6 +84,15 @@ def my_command(
 - `FromDI(provider)` — marker used in `Annotated[T, FromDI(...)]`; accepts a provider instance or a type
 - `fetch_di_container(ctx)` — returns the app-scoped container from `ctx.obj`
 
+## Used by
+
+- **[semvertag](https://github.com/modern-python/semvertag)** — a CLI
+  auto-tagger for GitLab/GitHub that wires its settings, API providers, and
+  version-bump strategies through a `modern_di` container with
+  `modern-di-typer`. See
+  [`semvertag/ioc.py`](https://github.com/modern-python/semvertag/blob/main/semvertag/ioc.py)
+  for a real-world `setup_di` + `Group` setup.
+
 ## 📦 [PyPI](https://pypi.org/project/modern-di-typer)
 
 ## 📝 [License](LICENSE)
