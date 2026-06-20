@@ -1,12 +1,14 @@
 [project]
 name = "modern-di-typer"
-description = "Modern-DI integration for Typer"
+description = "modern-di integration for Typer"
 authors = [{ name = "Artur Shiriev", email = "me@shiriev.ru" }]
 requires-python = ">=3.10,<4"
 license = "MIT"
 readme = "README.md"
-keywords = ["DI", "dependency injector", "ioc-container", "Typer", "python"]
+keywords = ["dependency-injection", "di", "ioc-container", "modern-di", "typer", "cli", "python"]
 classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -19,8 +21,11 @@ dependencies = ["typer>=0.9,<1", "modern-di>=2.19.0,<3"]
 version = "0"
 
 [project.urls]
-repository = "https://github.com/modern-python/modern-di-typer"
-docs = "https://modern-di.modern-python.org"
+Homepage = "https://modern-di.modern-python.org"
+Documentation = "https://modern-di.modern-python.org"
+Repository = "https://github.com/modern-python/modern-di-typer"
+Issues = "https://github.com/modern-python/modern-di-typer/issues"
+Changelog = "https://github.com/modern-python/modern-di-typer/releases"
 
 [dependency-groups]
 dev = [
