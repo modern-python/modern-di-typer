@@ -99,15 +99,7 @@ def my_command(
 
 ## Part of `modern-python`
 
+Built on [`modern-di`](https://github.com/modern-python/modern-di), a dependency-injection framework with IoC container and scopes.
+
 Browse the full list of templates and libraries in
 [`modern-python`](https://github.com/modern-python) — see the org profile for the categorized index.
-
-## modern-di ecosystem
-
-Built on [`modern-di`](https://github.com/modern-python/modern-di), a dependency-injection framework with IoC container and scopes. Integrations:
-
-- [`modern-di-fastapi`](https://github.com/modern-python/modern-di-fastapi) — FastAPI
-- [`modern-di-litestar`](https://github.com/modern-python/modern-di-litestar) — Litestar
-- [`modern-di-faststream`](https://github.com/modern-python/modern-di-faststream) — FastStream
-- [`modern-di-typer`](https://github.com/modern-python/modern-di-typer) — this package
-- [`modern-di-pytest`](https://github.com/modern-python/modern-di-pytest) — pytest
