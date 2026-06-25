@@ -55,12 +55,15 @@ if __name__ == "__main__":
 
 ## Action scope
 
-To resolve `Scope.ACTION` dependencies, inject `modern_di.Container` (the REQUEST-scoped container created by `@inject`) and build a child:
+`Scope.ACTION` dependencies live below the per-command `Scope.REQUEST` container.
+Open one with `action_scope(ctx)`: each `with` block yields a fresh action-scoped
+container (a child of the command's request container), so you can open as many as
+you need within a single command — one per item in a batch, for example.
 
 ```python
-import modern_di
+import typer
 from modern_di import Scope, providers, Group
-from modern_di_typer import FromDI, inject
+from modern_di_typer import FromDI, action_scope, inject
 
 
 class Dependencies(Group):
@@ -69,12 +72,10 @@ class Dependencies(Group):
 
 @app.command()
 @inject
-def my_command(
-    container: typing.Annotated[modern_di.Container, FromDI(modern_di.Container)],
-) -> None:
-    with container.build_child_container() as action_container:
-        job = action_container.resolve_provider(Dependencies.job)
-        job.run()
+def my_command(ctx: typer.Context) -> None:
+    for job_name in job_names:
+        with action_scope(ctx) as action:
+            action.resolve_provider(Dependencies.job).run()
 ```
 
 ## API
@@ -82,6 +83,7 @@ def my_command(
 - `setup_di(app, container)` — register the container with a Typer app
 - `inject` — decorator that resolves `FromDI`-annotated parameters before the command runs; also exposes `typer.Context` with `ctx.obj["di_container"]` for manual use
 - `FromDI(provider)` — marker used in `Annotated[T, FromDI(...)]`; accepts a provider instance or a type
+- `action_scope(ctx)` — context manager yielding a fresh `Scope.ACTION` container (a child of the command's request container); open one per action
 - `fetch_di_container(ctx)` — returns the app-scoped container from `ctx.obj`
 
 ## Used by

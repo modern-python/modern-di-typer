@@ -11,6 +11,8 @@ from modern_di import Container, Scope, providers
 T_co = typing.TypeVar("T_co", covariant=True)
 T = typing.TypeVar("T")
 
+_COMMAND_CONTAINER_KEY: typing.Final = "modern_di_typer.command_container"
+
 
 @dataclasses.dataclass(slots=True, frozen=True)
 class _FromDI(typing.Generic[T_co]):
@@ -41,6 +43,13 @@ def _build_command_container(ctx: typer.Context) -> typing.Iterator[Container]:
         yield container
     finally:
         container.close_sync()
+
+
+@contextlib.contextmanager
+def action_scope(ctx: typer.Context) -> typing.Iterator[Container]:
+    request_container: Container = ctx.meta[_COMMAND_CONTAINER_KEY]
+    with request_container.build_child_container() as action_container:
+        yield action_container
 
 
 def _parse_inject_params(
@@ -105,11 +114,10 @@ def inject(func: typing.Callable[..., T]) -> typing.Callable[..., T]:
         if added_ctx:
             del arguments[ctx_key]
 
-        if not di_params:
-            return func(**arguments)
-
         with _build_command_container(ctx) as cmd_container:
-            arguments.update(_resolve_di_params(cmd_container, di_params))
+            ctx.meta[_COMMAND_CONTAINER_KEY] = cmd_container
+            if di_params:
+                arguments.update(_resolve_di_params(cmd_container, di_params))
             return func(**arguments)
 
     wrapper.__signature__ = new_sig  # ty: ignore[unresolved-attribute]

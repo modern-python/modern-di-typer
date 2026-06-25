@@ -22,13 +22,14 @@ The `inject` decorator works at decoration time, not call time:
 
 1. **Decoration time** (`inject(func)`): Inspects type hints via `typing.get_type_hints` to find parameters annotated with `Annotated[T, _FromDI(...)]`. Rewrites `func.__signature__` to remove DI params (so Typer doesn't prompt for them) and injects a `typer.Context` parameter if one isn't already present.
 
-2. **Call time** (`wrapper(...)`): Reads the app-level container from the module global `_container` (set by `setup_di`), stores it in `ctx.obj["di_container"]`, builds a `Scope.REQUEST` child container, resolves DI params, and calls the original function with all params filled in.
+2. **Call time** (`wrapper(...)`): Reads the app-scoped container via `fetch_di_container(ctx)` (which reads `ctx.obj["di_container"]`, where `setup_di` stashed it), always builds a `Scope.REQUEST` child container, stashes it on `ctx.meta` (under `_COMMAND_CONTAINER_KEY`) so `action_scope` can parent ACTION children onto it, resolves DI params (if any), and calls the original function with all params filled in.
 
 ### Scope model
 
-- `setup_di(app, container)` — registers an **app-scoped** container in the module global `_container`
+- `setup_di(app, container)` — registers an **app-scoped** container by stashing it in `app.info.context_settings["obj"]["di_container"]`, which Typer/Click promotes to `ctx.obj` at runtime
 - `@inject` — creates a **REQUEST-scoped** child container per command invocation (closed after the command returns)
-- `build_command_container(ctx)` — context manager for commands that need a fresh REQUEST-scoped container manually (e.g., to create ACTION-scoped grandchildren)
+- `_build_command_container(ctx)` — private context manager (not exported) that `inject` uses to build the REQUEST-scoped child
+- `action_scope(ctx)` — public context manager yielding an **ACTION-scoped** child of the command's REQUEST container (read from `ctx.meta`); each `with` block is a fresh action scope, so a command can open many within one invocation (see README "Action scope"). Injecting `modern_di.Container` + calling `build_child_container()` manually still works but `action_scope` is preferred
 
 ### `FromDI` type trick
 
