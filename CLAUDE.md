@@ -4,25 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-```bash
-# Install dependencies
-uv sync --all-extras --frozen --group lint
+Run `just --list` (or read the `Justfile`) for all recipes. Which to use when:
 
-# Run all tests
-just test
-
-# Run a single test
-just test tests/test_commands.py::test_app_scoped_factory
-
-# Lint (auto-fix)
-just lint
-
-# Lint (CI mode, no fixes)
-just lint-ci
-
-# Run tests with branch coverage
-just test-branch
-```
+- `just test` — plain pytest, no coverage gate. Passes args through, e.g.
+  `just test tests/test_commands.py::test_app_scoped_factory`.
+- `just test-ci` / `just test-branch` — the 100%-coverage-gated runs (CI uses
+  `test-ci`; `test-branch` adds branch coverage).
+- `just lint` auto-fixes; `just lint-ci` is the non-fixing CI check.
 
 ## Architecture
 
