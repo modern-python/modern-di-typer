@@ -10,30 +10,29 @@ Run `just --list` (or read the `Justfile`) for all recipes. Which to use when:
   `just test tests/test_commands.py::test_app_scoped_factory`.
 - `just test-ci` / `just test-branch` — the 100%-coverage-gated runs (CI uses
   `test-ci`; `test-branch` adds branch coverage).
-- `just lint` auto-fixes; `just lint-ci` is the non-fixing CI check.
+- `just lint` auto-fixes; `just lint-ci` is the non-fixing CI check (also validates planning bundles).
+- `just check-planning` validates planning bundles/decisions; `just index` prints the change listing.
 
 ## Architecture
 
-This is a small library (~120 lines) that integrates [Modern-DI](https://github.com/modern-python/modern-di) with [Typer](https://github.com/fastapi/typer). The entire implementation lives in `modern_di_typer/main.py`.
+> Quick orientation only. The authoritative, code-current account of each capability lives in [`architecture/`](architecture/) — one file per capability. **When a change alters a capability's behavior, update the matching `architecture/<capability>.md` in the same PR** — that promotion is what keeps `architecture/` true.
 
-### How `inject` works
+This is a small library (~120 lines) integrating [Modern-DI](https://github.com/modern-python/modern-di) with [Typer](https://github.com/fastapi/typer); the implementation lives in `modern_di_typer/main.py`.
 
-The `inject` decorator works at decoration time, not call time:
+- **Injection** — `@inject` rewrites a command's signature at decoration time (removing `FromDI` params, adding `typer.Context`) and resolves those params at call time. `FromDI(provider)` is the annotation marker.
+- **Scopes** — `setup_di` registers the **app container**; `@inject` builds a per-command **`Scope.REQUEST` container** (stashed on `ctx.meta`); `action_scope(ctx)` yields an **`Scope.ACTION`** child of it, one fresh container per `with` block.
 
-1. **Decoration time** (`inject(func)`): Inspects type hints via `typing.get_type_hints` to find parameters annotated with `Annotated[T, _FromDI(...)]`. Rewrites `func.__signature__` to remove DI params (so Typer doesn't prompt for them) and injects a `typer.Context` parameter if one isn't already present.
+Where the detail lives — read the matching capability file before changing behavior:
 
-2. **Call time** (`wrapper(...)`): Reads the app-level container from the module global `_container` (set by `setup_di`), stores it in `ctx.obj["di_container"]`, builds a `Scope.REQUEST` child container, resolves DI params, and calls the original function with all params filled in.
-
-### Scope model
-
-- `setup_di(app, container)` — registers an **app-scoped** container in the module global `_container`
-- `@inject` — creates a **REQUEST-scoped** child container per command invocation (closed after the command returns)
-- `build_command_container(ctx)` — context manager for commands that need a fresh REQUEST-scoped container manually (e.g., to create ACTION-scoped grandchildren)
-
-### `FromDI` type trick
-
-`FromDI` is a factory function that returns `typing.cast(T_co, _FromDI(provider))`. This makes type checkers treat it as returning the resolved type `T_co` while at runtime it returns a `_FromDI` dataclass instance that `inject` can detect.
+| File | Covers |
+|---|---|
+| [architecture/scopes.md](architecture/scopes.md) | app container, per-command container, `action_scope`, `setup_di`/`fetch_di_container` |
+| [architecture/injection.md](architecture/injection.md) | `@inject` decoration/call time, the `FromDI` marker |
 
 ### Test pattern
 
 Tests define commands inline inside test functions and invoke them with `typer.testing.CliRunner`. The `app` fixture (in `conftest.py`) creates a fresh Typer app + container for each test.
+
+## Workflow
+
+Planning uses a portable two-axis convention — [`architecture/`](architecture/) (repo root) is the living **truth home** and promotion target; [`planning/changes/`](planning/changes/) holds the per-change bundles. **Start at the [Quick path](planning/README.md#quick-path-start-here)** in `planning/README.md` to choose a lane, create a bundle, and ship. Run `just check-planning` to validate bundles and `just index` to print the listing. Design decisions (and rejected alternatives) live in [`planning/decisions/`](planning/decisions/).

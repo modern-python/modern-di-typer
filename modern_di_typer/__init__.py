@@ -1,5 +1,6 @@
 from modern_di_typer.main import (
     FromDI,
+    action_scope,
     fetch_di_container,
     inject,
     setup_di,
@@ -8,6 +9,7 @@ from modern_di_typer.main import (
 
 __all__ = [
     "FromDI",
+    "action_scope",
     "fetch_di_container",
     "inject",
     "setup_di",

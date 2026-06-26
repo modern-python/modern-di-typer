@@ -16,4 +16,10 @@ class DependentCreator:
 class Dependencies(Group):
     app_factory = providers.Factory(creator=SimpleCreator, kwargs={"dep1": "original"})
     request_factory = providers.Factory(scope=Scope.REQUEST, creator=DependentCreator, bound_type=None)
+    cached_request_factory = providers.Factory(
+        scope=Scope.REQUEST,
+        creator=DependentCreator,
+        bound_type=None,
+        cache_settings=providers.CacheSettings(),
+    )
     action_factory = providers.Factory(scope=Scope.ACTION, creator=DependentCreator, bound_type=None)

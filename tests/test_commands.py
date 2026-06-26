@@ -5,7 +5,7 @@ import typer
 from typer.testing import CliRunner
 
 import modern_di_typer
-from modern_di_typer import FromDI, inject
+from modern_di_typer import FromDI, action_scope, inject
 from tests.dependencies import Dependencies, DependentCreator, SimpleCreator
 
 
@@ -55,6 +55,56 @@ def test_action_scope(app: typer.Typer) -> None:
 
     result = runner.invoke(app)
     assert result.exit_code == 0
+
+
+def test_action_scope_resolves_action_provider(app: typer.Typer) -> None:
+    runner = CliRunner()
+
+    @app.command()
+    @inject
+    def cmd(ctx: typer.Context) -> None:
+        with action_scope(ctx) as action:
+            instance = action.resolve_provider(Dependencies.action_factory)
+            assert isinstance(instance, DependentCreator)
+
+    result = runner.invoke(app)
+    assert result.exit_code == 0, result.output
+
+
+def test_action_scope_yields_distinct_instances_per_iteration(app: typer.Typer) -> None:
+    runner = CliRunner()
+    instances: list[DependentCreator] = []
+
+    @app.command()
+    @inject
+    def cmd(ctx: typer.Context) -> None:
+        for _ in range(2):
+            with action_scope(ctx) as action:
+                instances.append(action.resolve_provider(Dependencies.action_factory))
+
+    result = runner.invoke(app)
+    assert result.exit_code == 0, result.output
+    assert len(instances) == 2  # noqa: PLR2004
+    assert instances[0] is not instances[1]
+
+
+def test_action_scope_shares_request_singleton(app: typer.Typer) -> None:
+    runner = CliRunner()
+    captured: dict[str, typing.Any] = {}
+
+    @app.command()
+    @inject
+    def cmd(
+        ctx: typer.Context,
+        request_instance: typing.Annotated[DependentCreator, FromDI(Dependencies.cached_request_factory)],
+    ) -> None:
+        with action_scope(ctx) as action:
+            captured["from_action"] = action.resolve_provider(Dependencies.cached_request_factory)
+        captured["injected"] = request_instance
+
+    result = runner.invoke(app)
+    assert result.exit_code == 0, result.output
+    assert captured["from_action"] is captured["injected"]
 
 
 def test_fetch_di_container(app: typer.Typer) -> None:
