@@ -1,4 +1,10 @@
-# modern-di-typer
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)"  srcset="https://raw.githubusercontent.com/modern-python/.github/main/brand/projects/modern-di-typer/lockup-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/modern-python/.github/main/brand/projects/modern-di-typer/lockup-light.svg">
+    <img alt="modern-di-typer" src="https://raw.githubusercontent.com/modern-python/.github/main/brand/projects/modern-di-typer/lockup.png" width="420">
+  </picture>
+</p>
 
 [![PyPI version](https://img.shields.io/pypi/v/modern-di-typer.svg)](https://pypi.org/project/modern-di-typer/)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/modern-di-typer.svg)](https://pypi.org/project/modern-di-typer/)
