@@ -8,7 +8,7 @@
 
 [![PyPI version](https://img.shields.io/pypi/v/modern-di-typer.svg)](https://pypi.org/project/modern-di-typer/)
 [![Supported Python versions](https://img.shields.io/pypi/pyversions/modern-di-typer.svg)](https://pypi.org/project/modern-di-typer/)
-[![Downloads](https://img.shields.io/pypi/dm/modern-di-typer.svg)](https://pypistats.org/packages/modern-di-typer)
+[![Downloads](https://static.pepy.tech/badge/modern-di-typer/month)](https://pepy.tech/projects/modern-di-typer)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/modern-python/modern-di-typer/actions/workflows/ci.yml)
 [![CI](https://github.com/modern-python/modern-di-typer/actions/workflows/ci.yml/badge.svg)](https://github.com/modern-python/modern-di-typer/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/modern-python/modern-di-typer.svg)](https://github.com/modern-python/modern-di-typer/blob/main/LICENSE)
