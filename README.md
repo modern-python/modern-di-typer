@@ -41,7 +41,7 @@ class Dependencies(Group):
 
 
 app = typer.Typer()
-container = modern_di.Container(groups=[Dependencies])
+container = modern_di.Container(groups=[Dependencies], validate=True)
 setup_di(app, container)
 
 
