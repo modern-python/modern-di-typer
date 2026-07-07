@@ -38,8 +38,8 @@ The wrapper runs on every invocation:
 2. Build the per-command `Scope.REQUEST` container and stash it on `ctx.meta`
    (see [scopes.md](scopes.md)).
 3. If there are `FromDI` parameters, `_resolve_di_params` resolves each from the
-   command container — `resolve_provider(...)` for provider markers,
-   `resolve(dependency_type=...)` for bare types — and fills them into the call.
+   command container via `resolve_dependency(...)` — modern-di's single
+   provider-or-type dispatch — and fills them into the call.
 4. Call the original function; close the command container on return.
 
 `FromDI` parameters coexist with ordinary Typer arguments and options: because
