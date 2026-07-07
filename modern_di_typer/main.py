@@ -77,14 +77,7 @@ def _resolve_di_params(
     cmd_container: Container,
     di_params: dict[str, _FromDI[typing.Any]],
 ) -> dict[str, typing.Any]:
-    return {
-        name: (
-            cmd_container.resolve_provider(marker.provider)
-            if isinstance(marker.provider, providers.AbstractProvider)
-            else cmd_container.resolve(dependency_type=marker.provider)
-        )
-        for name, marker in di_params.items()
-    }
+    return {name: cmd_container.resolve_dependency(marker.provider) for name, marker in di_params.items()}
 
 
 def inject(func: typing.Callable[..., T]) -> typing.Callable[..., T]:
