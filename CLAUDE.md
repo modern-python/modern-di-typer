@@ -10,8 +10,8 @@ Run `just --list` (or read the `Justfile`) for all recipes. Which to use when:
   `just test tests/test_commands.py::test_app_scoped_factory`.
 - `just test-ci` / `just test-branch` — the 100%-coverage-gated runs (CI uses
   `test-ci`; `test-branch` adds branch coverage).
-- `just lint` auto-fixes; `just lint-ci` is the non-fixing CI check (also validates planning bundles).
-- `just check-planning` validates planning bundles/decisions; `just index` prints the change listing.
+- `just lint` auto-fixes; `just lint-ci` is the non-fixing CI check (also validates planning changes).
+- `just check-planning` validates planning changes/decisions; `just index` prints the change listing.
 
 ## Architecture
 
@@ -35,4 +35,4 @@ Tests define commands inline inside test functions and invoke them with `typer.t
 
 ## Workflow
 
-Planning uses a portable two-axis convention — [`architecture/`](architecture/) (repo root) is the living **truth home** and promotion target; [`planning/changes/`](planning/changes/) holds the per-change bundles. **Start at the [Quick path](planning/README.md#quick-path-start-here)** in `planning/README.md` to choose a lane, create a bundle, and ship. Run `just check-planning` to validate bundles and `just index` to print the listing. Design decisions (and rejected alternatives) live in [`planning/decisions/`](planning/decisions/).
+Planning uses a portable two-axis convention — [`architecture/`](architecture/) (repo root) is the living **truth home** and promotion target; [`planning/changes/`](planning/changes/) holds the per-change files. **Start at the [Quick path](planning/README.md#quick-path-start-here)** in `planning/README.md` to choose a lane, create a change file, and ship. Run `just check-planning` to validate changes and `just index` to print the listing. Design decisions (and rejected alternatives) live in [`planning/decisions/`](planning/decisions/).
