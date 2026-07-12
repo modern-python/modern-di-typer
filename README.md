@@ -19,6 +19,8 @@
 
 [Modern-DI](https://github.com/modern-python/modern-di) integration for [Typer](https://typer.tiangolo.com).
 
+Full guide: [Typer integration docs](https://modern-di.modern-python.org/integrations/typer/)
+
 ## Installation
 
 ```bash
