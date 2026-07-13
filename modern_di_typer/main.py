@@ -1,26 +1,18 @@
 import contextlib
-import dataclasses
 import functools
 import inspect
 import typing
 
 import typer
-from modern_di import Container, Scope, providers
+from modern_di import Container, Scope, integrations
 
 
-T_co = typing.TypeVar("T_co", covariant=True)
 T = typing.TypeVar("T")
 
 _COMMAND_CONTAINER_KEY: typing.Final = "modern_di_typer.command_container"
 
 
-@dataclasses.dataclass(slots=True, frozen=True)
-class _FromDI(typing.Generic[T_co]):
-    provider: providers.AbstractProvider[T_co] | type[T_co]
-
-
-def FromDI(provider: providers.AbstractProvider[T_co] | type[T_co]) -> T_co:  # noqa: N802
-    return typing.cast(T_co, _FromDI(provider))
+FromDI = integrations.from_di
 
 
 def setup_di(app: typer.Typer, container: Container) -> Container:
@@ -54,30 +46,10 @@ def action_scope(ctx: typer.Context) -> typing.Iterator[Container]:
 
 def _parse_inject_params(
     func: typing.Callable[..., typing.Any],
-) -> tuple[dict[str, _FromDI[typing.Any]], str | None]:
+) -> tuple[dict[str, integrations.Marker[typing.Any]], str | None]:
     hints = typing.get_type_hints(func, include_extras=True)
-    di_params: dict[str, _FromDI[typing.Any]] = {}
-    ctx_param_name: str | None = None
-
-    for name, hint in hints.items():
-        if name == "return":
-            continue
-        if hint is typer.Context:
-            ctx_param_name = name
-        elif typing.get_origin(hint) is typing.Annotated:
-            for meta in typing.get_args(hint)[1:]:
-                if isinstance(meta, _FromDI):
-                    di_params[name] = meta
-                    break
-
-    return di_params, ctx_param_name
-
-
-def _resolve_di_params(
-    cmd_container: Container,
-    di_params: dict[str, _FromDI[typing.Any]],
-) -> dict[str, typing.Any]:
-    return {name: cmd_container.resolve_dependency(marker.provider) for name, marker in di_params.items()}
+    ctx_param_name = next((name for name, hint in hints.items() if hint is typer.Context), None)
+    return integrations.parse_markers(func), ctx_param_name
 
 
 def inject(func: typing.Callable[..., T]) -> typing.Callable[..., T]:
@@ -110,7 +82,7 @@ def inject(func: typing.Callable[..., T]) -> typing.Callable[..., T]:
         with _build_command_container(ctx) as cmd_container:
             ctx.meta[_COMMAND_CONTAINER_KEY] = cmd_container
             if di_params:
-                arguments.update(_resolve_di_params(cmd_container, di_params))
+                arguments.update(integrations.resolve_markers(cmd_container, di_params))
             return func(**arguments)
 
     wrapper.__signature__ = new_sig  # ty: ignore[unresolved-attribute]
