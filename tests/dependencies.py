@@ -20,6 +20,6 @@ class Dependencies(Group):
         scope=Scope.REQUEST,
         creator=DependentCreator,
         bound_type=None,
-        cache_settings=providers.CacheSettings(),
+        cache=providers.CacheSettings(),
     )
     action_factory = providers.Factory(scope=Scope.ACTION, creator=DependentCreator, bound_type=None)
