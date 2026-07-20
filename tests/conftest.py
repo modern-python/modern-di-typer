@@ -11,7 +11,6 @@ from tests.dependencies import Dependencies
 @pytest.fixture
 def app() -> typing.Iterator[typer.Typer]:
     app_ = typer.Typer()
-    container = modern_di.Container(groups=[Dependencies], validate=True)
-    modern_di_typer.setup_di(app_, container=container)
-    yield app_
-    container.close_sync()
+    with modern_di.Container(groups=[Dependencies], validate=True) as container:
+        modern_di_typer.setup_di(app_, container=container)
+        yield app_

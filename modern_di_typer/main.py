@@ -30,11 +30,8 @@ def fetch_di_container(ctx: typer.Context) -> Container:
 
 @contextlib.contextmanager
 def _build_command_container(ctx: typer.Context) -> typing.Iterator[Container]:
-    container = fetch_di_container(ctx).build_child_container(scope=Scope.REQUEST)
-    try:
+    with fetch_di_container(ctx).build_child_container(scope=Scope.REQUEST) as container:
         yield container
-    finally:
-        container.close_sync()
 
 
 @contextlib.contextmanager
