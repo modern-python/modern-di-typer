@@ -21,6 +21,8 @@
 
 Full guide: [Typer integration docs](https://modern-di.modern-python.org/integrations/typer/)
 
+Usage example: [examples/](./examples)
+
 ## Installation
 
 ```bash

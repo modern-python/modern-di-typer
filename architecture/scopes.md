@@ -17,10 +17,10 @@ which Typer/Click promotes to `ctx.obj` when a command runs. Retrieve it with
 ```python
 app = typer.Typer()
 container = modern_di.Container(groups=[Dependencies])
-setup_di(app, container)        # registers the app container
+setup_di(app, container)  # registers the app container
 
 if __name__ == "__main__":
-    with container:             # opens/closes the app container
+    with container:  # opens/closes the app container
         app()
 ```
 
@@ -53,7 +53,7 @@ each `with` block builds a fresh action container, a single command can open
 @inject
 def my_command(ctx: typer.Context) -> None:
     for job_name in job_names:
-        with action_scope(ctx) as action:          # one ACTION container per job
+        with action_scope(ctx) as action:  # one ACTION container per job
             action.resolve_provider(Dependencies.job).run()
 ```
 
