@@ -107,6 +107,67 @@ def test_action_scope_shares_request_singleton(app: typer.Typer) -> None:
     assert captured["from_action"] is captured["injected"]
 
 
+def test_each_action_scope_block_opens_its_own_container(app: typer.Typer) -> None:
+    """INVARIANT: every ``action_scope`` block opens its own container, so one command can open many.
+
+    Broken by hoisting the action container up to one per command — the shape auto-injection would
+    have forced, and the reason it was rejected (``docs/adr/0001-action-scope-stays-caller-driven.md``).
+    ``Scope.ACTION`` sits below ``Scope.REQUEST`` for exactly one purpose: several action lifetimes
+    inside a single command, one per item of a batch. Collapse it to one and the scope is
+    indistinguishable from REQUEST while still costing a container.
+
+    Both assertions are load-bearing. The container check catches a block that re-yields an
+    already-built container; the instance check catches one that yields a distinct container which
+    is nonetheless not a fresh lifetime. The provider is *cached* on purpose — an uncached one
+    hands back a new instance per resolve, so it would prove nothing about which container produced
+    it and the second assertion would hold under every violation.
+    """
+    runner = CliRunner()
+    containers: list[modern_di.Container] = []
+    instances: list[DependentCreator] = []
+
+    @app.command()
+    @inject
+    def cmd(ctx: typer.Context) -> None:
+        for _ in range(2):
+            with action_scope(ctx) as action:
+                containers.append(action)
+                instances.append(action.resolve_provider(Dependencies.cached_action_factory))
+
+    result = runner.invoke(app)
+    assert result.exit_code == 0, result.output
+    assert containers[0] is not containers[1]
+    assert instances[0] is not instances[1]
+
+
+def test_command_container_never_enters_shared_app_state(app: typer.Typer) -> None:
+    """INVARIANT: the command container is stashed on per-invocation state, never on ``ctx.obj``.
+
+    Broken by parking the command container — or anything else per-invocation — in the object Typer
+    builds from ``context_settings``. That object is a single dict shared by every invocation of the
+    same app, so a container left there outlives the command that opened it: a later invocation can
+    reach a closed container, and a long-lived app accumulates one per command run. ``ctx.meta`` is
+    rebuilt per invocation and discarded with the context, which is what makes the command
+    container's lifetime equal to the command's.
+    """
+    runner = CliRunner()
+    obj_keys: list[set[str]] = []
+
+    @app.command()
+    @inject
+    def cmd(ctx: typer.Context) -> None:
+        with action_scope(ctx) as action:
+            action.resolve_provider(Dependencies.action_factory)
+        obj_keys.append(set(ctx.obj))
+
+    result = runner.invoke(app)
+    assert result.exit_code == 0, result.output
+    assert obj_keys == [{"di_container"}]
+    context_settings = app.info.context_settings
+    assert context_settings is not None
+    assert set(context_settings["obj"]) == {"di_container"}
+
+
 def test_fetch_di_container(app: typer.Typer) -> None:
     runner = CliRunner()
 

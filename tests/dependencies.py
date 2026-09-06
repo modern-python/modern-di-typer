@@ -23,3 +23,9 @@ class Dependencies(Group):
         cache=providers.CacheSettings(),
     )
     action_factory = providers.Factory(scope=Scope.ACTION, creator=DependentCreator, bound_type=None)
+    cached_action_factory = providers.Factory(
+        scope=Scope.ACTION,
+        creator=DependentCreator,
+        bound_type=None,
+        cache=providers.CacheSettings(),
+    )
