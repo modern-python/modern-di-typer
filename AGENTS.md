@@ -2,37 +2,68 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Overview
+
+`modern-di-typer` wires [`modern-di`](https://github.com/modern-python/modern-di) into
+[Typer](https://typer.tiangolo.com); [`CONTEXT.md`](CONTEXT.md) opens with what it does and owns the
+vocabulary — read it before naming a concept in code, a test name, or an issue title. It is one of
+modern-di's integrations, each of which lives in a separate repository and ships as a separate PyPI
+package.
+
 ## Commands
 
-Run `just --list` (or read the `justfile`) for all recipes. Which to use when:
-
-- `just test` — plain pytest, no coverage gate. Passes args through, e.g.
-  `just test tests/test_commands.py::test_app_scoped_factory`.
-- `just test-ci` / `just test-branch` — the 100%-coverage-gated runs (CI uses
-  `test-ci`; `test-branch` adds branch coverage).
-- `just lint` auto-fixes; `just lint-ci` is the non-fixing CI check (also validates planning changes).
-- `just check-planning` validates planning changes/decisions; `just index` prints the change listing.
+`just` (task runner) and `uv` (package manager). The [`justfile`](justfile) is the source of truth —
+`just --list`, or read it. The one thing it does not say: a `ty` suppression is written
+`# ty: ignore`, never `# type: ignore`.
 
 ## Architecture
 
-> Quick orientation only. The authoritative, code-current account of each capability lives in [`architecture/`](architecture/) — one file per capability. **When a change alters a capability's behavior, update the matching `architecture/<capability>.md` in the same PR** — that promotion is what keeps `architecture/` true.
+All implementation is `modern_di_typer/main.py`, short enough to read whole. Read it.
 
-This is a small library (~120 lines) integrating [Modern-DI](https://github.com/modern-python/modern-di) with [Typer](https://github.com/fastapi/typer); the implementation lives in `modern_di_typer/main.py`.
+### Testing patterns
 
-- **Injection** — `@inject` rewrites a command's signature at decoration time (removing `FromDI` params, adding `typer.Context`) and resolves those params at call time. `FromDI(provider)` is the annotation marker.
-- **Scopes** — `setup_di` registers the **app container**; `@inject` builds a per-command **`Scope.REQUEST` container** (stashed on `ctx.meta`); `action_scope(ctx)` yields an **`Scope.ACTION`** child of it, one fresh container per `with` block.
-
-Where the detail lives — read the matching capability file before changing behavior:
-
-| File | Covers |
-|---|---|
-| [architecture/scopes.md](architecture/scopes.md) | app container, per-command container, `action_scope`, `setup_di`/`fetch_di_container` |
-| [architecture/injection.md](architecture/injection.md) | `@inject` decoration/call time, the `FromDI` marker |
-
-### Test pattern
-
-Tests define commands inline inside test functions and invoke them with `typer.testing.CliRunner`. The `app` fixture (in `conftest.py`) creates a fresh Typer app + container for each test.
+A test defines its command **inside the test function** and drives it with
+`typer.testing.CliRunner`. Module-level commands would share one app across tests; the `app` fixture
+in `conftest.py` exists so each test gets a fresh Typer app and its own opened app container.
 
 ## Workflow
 
-Planning uses a portable two-axis convention — [`architecture/`](architecture/) (repo root) is the living **truth home** and promotion target; [`planning/changes/`](planning/changes/) holds the per-change files. **Start at the [Quick path](planning/README.md#quick-path-start-here)** in `planning/README.md` to choose a lane, create a change file, and ship. Run `just check-planning` to validate changes and `just index` to print the listing. Design decisions (and rejected alternatives) live in [`planning/decisions/`](planning/decisions/).
+**The spec for a change is its PR body**, not a committed file: why, design, non-goals,
+verification, reviewed with the diff. There is no change file and no lane to choose. A trivial PR
+(typo, dep bump, formatter, CI tweak) ships a conventional-commit title with no body ceremony.
+
+Two things outlive the PR, and there are exactly two places to put them: an alternative **rejected**
+with reasoning becomes an ADR in [`docs/adr/`](docs/adr/) (`NNNN-slug.md`, sequential, with a
+revisit trigger), and real work **not scheduled** becomes a GitHub issue. There is no third state,
+and no separate truth-home directory — a behaviour change is reviewed with the diff, not promoted
+to a page.
+
+### Where a fact goes
+
+Four homes, one owner each:
+
+| Home | Holds |
+|---|---|
+| `modern_di_typer/` | anything readable from the module — the default |
+| a named test | an **invariant**: must stay true, and a change could silently break it |
+| `docs/adr/` | a rejected alternative, with the reasoning that would otherwise be re-litigated |
+| `README.md` | anything a user needs |
+
+Before writing a line anywhere:
+
+> Can an agent get this by reading `modern_di_typer/`? → **don't write it.**
+> Would a wrong change here fail a test? → it belongs **in the test**, not in prose.
+> Does a user need it? → **`README.md`**.
+> Otherwise it does not get written.
+
+**Prose about mechanism has no home. There is no file to add a paragraph to.** This file included:
+it is always loaded, so a line that restates a docstring, a justfile comment, or `pyproject.toml`
+costs every turn and rots in two places at once. A package this small tempts a full restatement of
+its own source; that is the failure mode to watch for here.
+
+An invariant is a test whose name is the claim, with a docstring opening `INVARIANT:` and a second
+paragraph naming **what breaks it** — design rationale, not a report of what this one test catches.
+Nothing enforces that docstring shape; it is read at review time. A relative link to an ADR *is*
+checked — CI runs lychee `--offline` over every `.md` — but a path named in a docstring or a
+comment is not. Both ADRs and `INVARIANT:` docstrings ratchet: nothing prunes a record once its
+call is settled. Keeping them lean is a standing habit.

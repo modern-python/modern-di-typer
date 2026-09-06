@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
 `Scope.ACTION` dependencies live below the per-command `Scope.REQUEST` container.
 Open one with `action_scope(ctx)`: each `with` block yields a fresh action-scoped
-container (a child of the command's request container), so you can open as many as
+container (a child of the command container), so you can open as many as
 you need within a single command — one per item in a batch, for example.
 
 ```python
@@ -94,7 +94,7 @@ def my_command(ctx: typer.Context) -> None:
 - `setup_di(app, container)` — register the container with a Typer app
 - `inject` — decorator that resolves `FromDI`-annotated parameters before the command runs; also exposes `typer.Context` with `ctx.obj["di_container"]` for manual use
 - `FromDI(provider)` — marker used in `Annotated[T, FromDI(...)]`; accepts a provider instance or a type
-- `action_scope(ctx)` — context manager yielding a fresh `Scope.ACTION` container (a child of the command's request container); open one per action
+- `action_scope(ctx)` — context manager yielding a fresh `Scope.ACTION` container (a child of the command container); open one per action
 - `fetch_di_container(ctx)` — returns the app-scoped container from `ctx.obj`
 
 ## Used by
