@@ -1,10 +1,10 @@
-# CLAUDE.md
+# AGENTS.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands
 
-Run `just --list` (or read the `Justfile`) for all recipes. Which to use when:
+Run `just --list` (or read the `justfile`) for all recipes. Which to use when:
 
 - `just test` — plain pytest, no coverage gate. Passes args through, e.g.
   `just test tests/test_commands.py::test_app_scoped_factory`.
