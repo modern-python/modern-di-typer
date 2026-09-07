@@ -21,7 +21,7 @@
 
 Full guide: [Typer integration docs](https://modern-di.modern-python.org/integrations/typer/)
 
-Usage example: [examples/](./examples)
+Usage example: [examples/](https://github.com/modern-python/modern-di-typer/tree/main/examples)
 
 ## Installation
 
@@ -108,7 +108,7 @@ def my_command(ctx: typer.Context) -> None:
 
 ## 📦 [PyPI](https://pypi.org/project/modern-di-typer)
 
-## 📝 [License](LICENSE)
+## 📝 [License](https://github.com/modern-python/modern-di-typer/blob/main/LICENSE)
 
 ## Part of `modern-python`
 

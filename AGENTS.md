@@ -32,6 +32,10 @@ in `conftest.py` exists so each test gets a fresh Typer app and its own opened a
 verification, reviewed with the diff. There is no change file and no lane to choose. A trivial PR
 (typo, dep bump, formatter, CI tweak) ships a conventional-commit title with no body ceremony.
 
+Every link in `README.md` must be absolute: `https://github.com/modern-python/<repo>/blob/main/<path>`,
+or `.../tree/main/<path>` for a directory. Never a relative path: `README.md` is also the PyPI long
+description, and PyPI does not rewrite relative links, so a relative one 404s on the package page.
+
 Two things outlive the PR, and there are exactly two places to put them: an alternative **rejected**
 with reasoning becomes an ADR in [`docs/adr/`](docs/adr/) (`NNNN-slug.md`, sequential, with a
 revisit trigger), and real work **not scheduled** becomes a GitHub issue. There is no third state,
@@ -63,7 +67,3 @@ its own source; that is the failure mode to watch for here.
 
 An invariant is a test whose name is the claim, with a docstring opening `INVARIANT:` and a second
 paragraph naming **what breaks it** — design rationale, not a report of what this one test catches.
-Nothing enforces that docstring shape; it is read at review time. A relative link to an ADR *is*
-checked — CI runs lychee `--offline` over every `.md` — but a path named in a docstring or a
-comment is not. Both ADRs and `INVARIANT:` docstrings ratchet: nothing prunes a record once its
-call is settled. Keeping them lean is a standing habit.
