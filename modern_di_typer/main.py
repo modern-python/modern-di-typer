@@ -25,7 +25,14 @@ def setup_di(app: typer.Typer, container: Container) -> Container:
 
 
 def fetch_di_container(ctx: typer.Context) -> Container:
-    return typing.cast(Container, ctx.obj["di_container"])
+    try:
+        return typing.cast(Container, ctx.obj["di_container"])
+    except (TypeError, KeyError):
+        msg = (
+            "No modern-di container found on the app. "
+            "Call setup_di(app, container) before using @inject or fetch_di_container."
+        )
+        raise RuntimeError(msg) from None
 
 
 @contextlib.contextmanager
