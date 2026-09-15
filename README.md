@@ -92,10 +92,10 @@ def my_command(ctx: typer.Context) -> None:
 ## API
 
 - `setup_di(app, container)` — register the container with a Typer app
-- `inject` — decorator that resolves `FromDI`-annotated parameters before the command runs; also exposes `typer.Context` with `ctx.obj["di_container"]` for manual use. Raises `RuntimeError` naming `setup_di` when a command reaches it without `setup_di` called
+- `inject` — decorator that resolves `FromDI`-annotated parameters before the command runs; also exposes `typer.Context`, from which `fetch_di_container(ctx)` returns the app container. Raises `RuntimeError` naming `setup_di` when a command reaches it without `setup_di` called
 - `FromDI(provider)` — marker used in `Annotated[T, FromDI(...)]`; accepts a provider instance or a type
 - `action_scope(ctx)` — context manager yielding a fresh `Scope.ACTION` container (a child of the command container); open one per action. Raises `RuntimeError` naming `@inject` when called from a command without it
-- `fetch_di_container(ctx)` — returns the app-scoped container from `ctx.obj`
+- `fetch_di_container(ctx)` — returns the app container registered by `setup_di`, from any command of the app, including those of nested `add_typer` sub-apps; it does not read `ctx.obj`, so the container stays reachable after a callback assigns `ctx.obj`
 
 ## Used by
 

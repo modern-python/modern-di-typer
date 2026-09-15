@@ -296,3 +296,99 @@ def test_action_scope_without_inject_raises_clear_error(app: typer.Typer) -> Non
 
     with pytest.raises(RuntimeError, match="@inject"):
         runner.invoke(app, catch_exceptions=False)
+
+
+def test_nested_sub_app_resolves_from_root_setup_di() -> None:
+    runner = CliRunner()
+    root = typer.Typer()
+    sub = typer.Typer()
+    received: dict[str, typing.Any] = {}
+
+    @sub.command()
+    @inject
+    def cmd(instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)]) -> None:
+        received["instance"] = instance
+
+    root.add_typer(sub, name="sub")
+    with modern_di.Container(groups=[Dependencies]) as container:
+        modern_di_typer.setup_di(root, container=container)
+        result = runner.invoke(root, ["sub", "cmd"])
+    assert result.exit_code == 0, result.output
+    assert isinstance(received["instance"], SimpleCreator)
+
+
+def test_nested_sub_app_action_scope_resolves_action_provider() -> None:
+    runner = CliRunner()
+    root = typer.Typer()
+    sub = typer.Typer()
+    received: dict[str, typing.Any] = {}
+
+    @sub.command()
+    @inject
+    def cmd(ctx: typer.Context) -> None:
+        with action_scope(ctx) as action:
+            received["instance"] = action.resolve_provider(Dependencies.action_factory)
+
+    root.add_typer(sub, name="sub")
+    with modern_di.Container(groups=[Dependencies]) as container:
+        modern_di_typer.setup_di(root, container=container)
+        result = runner.invoke(root, ["sub", "cmd"])
+    assert result.exit_code == 0, result.output
+    assert isinstance(received["instance"], DependentCreator)
+
+
+def test_nested_sub_app_with_own_obj_resolves_from_root_setup_di() -> None:
+    """INVARIANT: a sub-app's own ``context_settings["obj"]`` does not hide the app container.
+
+    Broken by reading the container from ``ctx.obj``: Click gives a sub-app that declares its own
+    ``obj`` a context that no longer inherits the parent's, so every command under it would report
+    a missing ``setup_di`` that was in fact called on the root
+    (``docs/adr/0003-app-container-is-read-from-the-root-command-not-ctx-obj.md``).
+    """
+    runner = CliRunner()
+    root = typer.Typer()
+    sub = typer.Typer(context_settings={"obj": {"mine": 1}})
+    received: dict[str, typing.Any] = {}
+
+    @sub.command()
+    @inject
+    def cmd(ctx: typer.Context, instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)]) -> None:
+        received["obj"] = ctx.obj
+        received["instance"] = instance
+
+    root.add_typer(sub, name="sub")
+    with modern_di.Container(groups=[Dependencies]) as container:
+        modern_di_typer.setup_di(root, container=container)
+        result = runner.invoke(root, ["sub", "cmd"])
+    assert result.exit_code == 0, result.output
+    assert received["obj"] == {"mine": 1}
+    assert isinstance(received["instance"], SimpleCreator)
+
+
+def test_callback_replacing_ctx_obj_keeps_app_container_reachable(app: typer.Typer) -> None:
+    """INVARIANT: ``ctx.obj`` belongs to the user; assigning it in a callback cannot lose the container.
+
+    Broken by reading the container from ``ctx.obj``. Assigning ``ctx.obj`` in the app callback is
+    Typer's documented way to carry user state, and it replaces the whole object, so no key inside
+    it survives (``docs/adr/0003-app-container-is-read-from-the-root-command-not-ctx-obj.md``).
+    """
+    runner = CliRunner()
+    received: dict[str, typing.Any] = {}
+    user_state = object()
+
+    @app.callback()
+    def callback(ctx: typer.Context) -> None:
+        ctx.obj = user_state
+
+    @app.command()
+    @inject
+    def cmd(ctx: typer.Context, instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)]) -> None:
+        received["obj"] = ctx.obj
+        received["instance"] = instance
+        received["fetched"] = modern_di_typer.fetch_di_container(ctx)
+
+    result = runner.invoke(app, ["cmd"])
+    assert result.exit_code == 0, result.output
+    assert received["obj"] is user_state
+    assert isinstance(received["instance"], SimpleCreator)
+    assert isinstance(received["fetched"], modern_di.Container)
