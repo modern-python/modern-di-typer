@@ -284,3 +284,15 @@ def test_fetch_di_container_without_setup_di_on_user_obj_raises_clear_error() ->
 
     with pytest.raises(RuntimeError, match=r"setup_di\(app, container\)"):
         runner.invoke(app, catch_exceptions=False)
+
+
+def test_action_scope_without_inject_raises_clear_error(app: typer.Typer) -> None:
+    runner = CliRunner()
+
+    @app.command()
+    def cmd(ctx: typer.Context) -> None:
+        with action_scope(ctx):
+            ...
+
+    with pytest.raises(RuntimeError, match="@inject"):
+        runner.invoke(app, catch_exceptions=False)
