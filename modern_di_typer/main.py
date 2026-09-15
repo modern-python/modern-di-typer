@@ -43,7 +43,14 @@ def _build_command_container(ctx: typer.Context) -> typing.Iterator[Container]:
 
 @contextlib.contextmanager
 def action_scope(ctx: typer.Context) -> typing.Iterator[Container]:
-    request_container: Container = ctx.meta[_COMMAND_CONTAINER_KEY]
+    try:
+        request_container: Container = ctx.meta[_COMMAND_CONTAINER_KEY]
+    except KeyError:
+        msg = (
+            "No modern-di command container found for this command. "
+            "Decorate the command with @inject so action_scope has a per-command container to nest under."
+        )
+        raise RuntimeError(msg) from None
     with request_container.build_child_container() as action_container:
         yield action_container
 
