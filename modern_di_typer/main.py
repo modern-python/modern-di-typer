@@ -9,6 +9,7 @@ from modern_di import Container, Scope, integrations
 
 T = typing.TypeVar("T")
 
+_APP_CONTAINER_KEY: typing.Final = "di_container"
 _COMMAND_CONTAINER_KEY: typing.Final = "modern_di_typer.command_container"
 
 
@@ -19,14 +20,14 @@ def setup_di(app: typer.Typer, container: Container) -> Container:
     if not app.info.context_settings:
         app.info.context_settings = {}
     obj = app.info.context_settings.get("obj") or {}
-    obj["di_container"] = container
+    obj[_APP_CONTAINER_KEY] = container
     app.info.context_settings["obj"] = obj
     return container
 
 
 def fetch_di_container(ctx: typer.Context) -> Container:
     try:
-        return typing.cast(Container, ctx.obj["di_container"])
+        return typing.cast(Container, ctx.find_root().command.context_settings["obj"][_APP_CONTAINER_KEY])
     except (TypeError, KeyError):
         msg = (
             "No modern-di container found on the app. "
