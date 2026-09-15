@@ -1,6 +1,7 @@
 import typing
 
 import modern_di
+import pytest
 import typer
 from typer.testing import CliRunner
 
@@ -259,3 +260,27 @@ def test_command_with_arg_option_and_explicit_context(app: typer.Typer) -> None:
     assert received["verbose"] is True
     assert isinstance(received["ctx"], typer._click.Context)  # noqa: SLF001
     assert isinstance(received["instance"], SimpleCreator)
+
+
+def test_inject_without_setup_di_raises_clear_error() -> None:
+    runner = CliRunner()
+    app = typer.Typer()
+
+    @app.command()
+    @inject
+    def cmd(instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)]) -> None: ...
+
+    with pytest.raises(RuntimeError, match=r"setup_di\(app, container\)"):
+        runner.invoke(app, catch_exceptions=False)
+
+
+def test_fetch_di_container_without_setup_di_on_user_obj_raises_clear_error() -> None:
+    runner = CliRunner()
+    app = typer.Typer(context_settings={"obj": {}})
+
+    @app.command()
+    def cmd(ctx: typer.Context) -> None:
+        modern_di_typer.fetch_di_container(ctx)
+
+    with pytest.raises(RuntimeError, match=r"setup_di\(app, container\)"):
+        runner.invoke(app, catch_exceptions=False)
