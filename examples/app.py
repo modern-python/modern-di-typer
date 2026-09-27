@@ -42,6 +42,6 @@ def greet(
     typer.echo(service.greet(name))
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     with container:
         app()
