@@ -48,7 +48,7 @@ class Dependencies(Group):
 app = typer.Typer()
 container = modern_di.Container(groups=[Dependencies])
 setup_di(app, container)
-container.validate()  # optional fail-fast; must come after setup_di registers its providers
+container.validate()  # optional fail-fast check of the provider graph
 
 
 @app.command()
