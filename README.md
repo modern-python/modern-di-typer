@@ -33,9 +33,10 @@ uv add modern-di-typer      # or: pip install modern-di-typer
 
 ```python
 import typing
-import typer
+
 import modern_di
-from modern_di import Scope, providers, Group
+import typer
+from modern_di import Group, Scope, providers
 from modern_di_typer import FromDI, inject, setup_di
 
 
@@ -69,12 +70,12 @@ if __name__ == "__main__":
 `Scope.ACTION` dependencies live below the per-command `Scope.REQUEST` container.
 Open one with `action_scope(ctx)`: each `with` block yields a fresh action-scoped
 container (a child of the command container), so you can open as many as
-you need within a single command — one per item in a batch, for example.
+you need within a single command, for example one per item in a batch.
 
 ```python
 import typer
-from modern_di import Scope, providers, Group
-from modern_di_typer import FromDI, action_scope, inject
+from modern_di import Group, Scope, providers
+from modern_di_typer import action_scope, inject
 
 
 class Dependencies(Group):
@@ -86,25 +87,22 @@ class Dependencies(Group):
 def my_command(ctx: typer.Context) -> None:
     for job_name in job_names:
         with action_scope(ctx) as action:
-            action.resolve_provider(Dependencies.job).run()
+            action.resolve_provider(Dependencies.job).run(job_name)
 ```
 
 ## API
 
-- `setup_di(app, container)` — register the container with a Typer app
-- `inject` — decorator that resolves `FromDI`-annotated parameters before the command runs; also exposes `typer.Context`, from which `fetch_di_container(ctx)` returns the app container. Raises `RuntimeError` naming `setup_di` when a command reaches it without `setup_di` called
-- `FromDI(provider)` — marker used in `Annotated[T, FromDI(...)]`; accepts a provider instance or a type
-- `action_scope(ctx)` — context manager yielding a fresh `Scope.ACTION` container (a child of the command container); open one per action. Raises `RuntimeError` naming `@inject` when called from a command without it
-- `fetch_di_container(ctx)` — returns the app container registered by `setup_di`, from any command of the app, including those of nested `add_typer` sub-apps; it does not read `ctx.obj`, so the container stays reachable after a callback assigns `ctx.obj`
+| Symbol | Description |
+|---|---|
+| `setup_di(app, container)` | Registers the container with a Typer app |
+| `inject` | Decorator that resolves `FromDI`-annotated parameters before the command runs; also exposes `typer.Context`, from which `fetch_di_container(ctx)` returns the app container. Raises `RuntimeError` naming `setup_di` when a command reaches it without `setup_di` called |
+| `FromDI(dependency)` | Marker used in `Annotated[T, FromDI(...)]`; accepts a provider instance or a type |
+| `action_scope(ctx)` | Context manager yielding a fresh `Scope.ACTION` container (a child of the command container); open one per action. Raises `RuntimeError` naming `@inject` when called from a command without it |
+| `fetch_di_container(ctx)` | Returns the app container registered by `setup_di`, from any command of the app, including those of nested `add_typer` sub-apps; it does not read `ctx.obj`, so the container stays reachable after a callback assigns `ctx.obj` |
 
 ## Used by
 
-- **[semvertag](https://github.com/modern-python/semvertag)** — a CLI
-  auto-tagger for GitLab/GitHub that wires its settings, API providers, and
-  version-bump strategies through a `modern_di` container with
-  `modern-di-typer`. See
-  [`semvertag/ioc.py`](https://github.com/modern-python/semvertag/blob/main/semvertag/ioc.py)
-  for a real-world `setup_di` + `Group` setup.
+[semvertag](https://github.com/modern-python/semvertag) uses `modern-di-typer` to wire its settings, API providers and version-bump strategies; see [`semvertag/ioc.py`](https://github.com/modern-python/semvertag/blob/main/semvertag/ioc.py).
 
 ## 📦 [PyPI](https://pypi.org/project/modern-di-typer)
 
@@ -112,7 +110,7 @@ def my_command(ctx: typer.Context) -> None:
 
 ## Part of `modern-python`
 
-Built on [`modern-di`](https://github.com/modern-python/modern-di), a dependency-injection framework with IoC container and scopes.
+Built on [`modern-di`](https://github.com/modern-python/modern-di), a dependency-injection framework with an IoC container and scopes.
 
 Browse the full list of templates and libraries in
-[`modern-python`](https://github.com/modern-python) — see the org profile for the categorized index.
+[`modern-python`](https://github.com/modern-python); the org profile has the categorized index.
