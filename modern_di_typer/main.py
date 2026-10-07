@@ -1,3 +1,4 @@
+import collections.abc
 import contextlib
 import functools
 import inspect
@@ -37,13 +38,13 @@ def fetch_di_container(ctx: typer.Context) -> Container:
 
 
 @contextlib.contextmanager
-def _build_command_container(ctx: typer.Context) -> typing.Iterator[Container]:
+def _build_command_container(ctx: typer.Context) -> collections.abc.Generator[Container]:
     with fetch_di_container(ctx).build_child_container(scope=Scope.REQUEST) as container:
         yield container
 
 
 @contextlib.contextmanager
-def action_scope(ctx: typer.Context) -> typing.Iterator[Container]:
+def action_scope(ctx: typer.Context) -> collections.abc.Generator[Container]:
     try:
         request_container: Container = ctx.meta[_COMMAND_CONTAINER_KEY]
     except KeyError:
