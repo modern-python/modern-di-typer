@@ -12,6 +12,7 @@ T = typing.TypeVar("T")
 
 _COMMAND_CONTAINER_KEY: typing.Final = "modern_di_typer.command_container"
 _CONTEXT_PARAM_NAME: typing.Final = "_modern_di_typer_ctx"
+_MISSING: typing.Final = object()
 
 
 FromDI = integrations.from_di
@@ -97,10 +98,18 @@ def inject(func: typing.Callable[..., T]) -> typing.Callable[..., T]:
             del arguments[ctx_key]
 
         with _build_command_container(ctx) as cmd_container:
+            previous = ctx.meta.get(_COMMAND_CONTAINER_KEY, _MISSING)
             ctx.meta[_COMMAND_CONTAINER_KEY] = cmd_container
-            if di_params:
-                arguments.update(integrations.resolve_markers(cmd_container, di_params))
-            return func(**arguments)
+            try:
+                if di_params:
+                    arguments.update(integrations.resolve_markers(cmd_container, di_params))
+                return func(**arguments)
+            finally:
+                # ctx.meta is shared with subcommands, which must not see this container once it closes.
+                if previous is _MISSING:
+                    del ctx.meta[_COMMAND_CONTAINER_KEY]
+                else:
+                    ctx.meta[_COMMAND_CONTAINER_KEY] = previous
 
     wrapper.__signature__ = new_sig  # ty: ignore[unresolved-attribute]
     return wrapper
