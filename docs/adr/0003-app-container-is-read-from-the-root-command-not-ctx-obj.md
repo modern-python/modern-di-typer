@@ -1,8 +1,10 @@
 # The app container is read from the root command, not from `ctx.obj`
 
-`setup_di` stores the app container in the Typer app's context settings, and `fetch_di_container`
+`setup_di` stores the app container on the Typer app's context settings, and `fetch_di_container`
 reads it back from the root command those settings become, however deep in the context tree the
-calling command sits. Nothing reads `ctx.obj`.
+calling command sits. Nothing reads `ctx.obj` or puts the container in it. When the user has not
+set `obj`, `setup_di` still sets it to an empty dict, so callbacks that write into `ctx.obj` keep
+working; a user's own `obj` is left as given.
 
 The context settings are the only channel from a Typer app into a Click context, so the write side
 has no alternative. The read side did. `ctx.obj` was the original choice, and it is Typer's
@@ -12,8 +14,12 @@ container was gone by the time a command looked for it, and the error blamed a `
 that had been made. Namespacing the key inside `ctx.obj` fixes neither, because the whole object is
 replaced.
 
-The key keeps its old name. It is off the read path now, so renaming it would break anyone who read
-it directly and buy nothing.
+The container is an attribute of the settings mapping, not a key inside it. `setup_di` swaps the
+app's settings for a `dict` subclass with the same items and the container attached, and Click keeps
+that object as the root command's `context_settings`. A key in the settings would be passed to the
+Click context as an argument it does not accept, and a key in `obj` is user territory: an earlier
+version kept the container at `obj["di_container"]`, so a callback writing that key broke every
+command, and the write lasted across invocations because the dict is shared.
 
 Revisit when Typer grows a per-app slot that reaches the Click context without going through the
 user's object, or when a single-command app whose one command declares its own context settings is
