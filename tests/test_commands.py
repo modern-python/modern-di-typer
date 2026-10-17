@@ -159,7 +159,7 @@ def test_command_container_never_enters_shared_app_state(app: typer.Typer) -> No
     def cmd(ctx: typer.Context) -> None:
         with action_scope(ctx) as action:
             action.resolve_provider(Dependencies.action_factory)
-        obj_keys.append(set(ctx.obj or {}))
+        obj_keys.append(set(ctx.obj))
 
     result = runner.invoke(app)
     assert result.exit_code == 0, result.output
@@ -472,10 +472,30 @@ def test_setup_di_leaves_user_obj_untouched() -> None:
     assert context_settings["help_option_names"] == ["-h"]
 
 
-def test_setup_di_adds_no_obj_when_user_set_none(app: typer.Typer) -> None:
+def test_setup_di_adds_empty_obj_when_user_set_none(app: typer.Typer) -> None:
     context_settings = app.info.context_settings
     assert context_settings is not None
-    assert "obj" not in context_settings
+    assert context_settings["obj"] == {}
+
+
+def test_callback_writes_into_obj_without_user_setting_obj(app: typer.Typer) -> None:
+    runner = CliRunner()
+    received: dict[str, typing.Any] = {}
+
+    @app.callback()
+    def callback(ctx: typer.Context) -> None:
+        ctx.obj["mine"] = 1
+
+    @app.command()
+    @inject
+    def cmd(ctx: typer.Context, instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)]) -> None:
+        received["obj"] = dict(ctx.obj)
+        received["instance"] = instance
+
+    result = runner.invoke(app, ["cmd"])
+    assert result.exit_code == 0, result.output
+    assert received["obj"] == {"mine": 1}
+    assert isinstance(received["instance"], SimpleCreator)
 
 
 def test_nested_sub_app_with_option_named_ctx_resolves_from_root_setup_di() -> None:

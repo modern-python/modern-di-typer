@@ -2,7 +2,9 @@
 
 `setup_di` stores the app container on the Typer app's context settings, and `fetch_di_container`
 reads it back from the root command those settings become, however deep in the context tree the
-calling command sits. Nothing reads or writes `ctx.obj`.
+calling command sits. Nothing reads `ctx.obj` or puts the container in it. When the user has not
+set `obj`, `setup_di` still sets it to an empty dict, so callbacks that write into `ctx.obj` keep
+working; a user's own `obj` is left as given.
 
 The context settings are the only channel from a Typer app into a Click context, so the write side
 has no alternative. The read side did. `ctx.obj` was the original choice, and it is Typer's

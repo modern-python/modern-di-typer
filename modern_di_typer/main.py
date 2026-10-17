@@ -23,6 +23,8 @@ class _ContextSettings(dict[str, typing.Any]):
 
 def setup_di(app: typer.Typer, container: Container) -> Container:
     settings = _ContextSettings(app.info.context_settings or {})
+    if settings.get("obj") is None:
+        settings["obj"] = {}
     settings.app_container = container
     app.info.context_settings = settings
     return container
