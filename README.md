@@ -104,9 +104,10 @@ def my_command(ctx: typer.Context) -> None:
 
 [semvertag](https://github.com/modern-python/semvertag) uses `modern-di-typer` to wire its settings, API providers and version-bump strategies; see [`semvertag/ioc.py`](https://github.com/modern-python/semvertag/blob/main/semvertag/ioc.py).
 
-## 📦 [PyPI](https://pypi.org/project/modern-di-typer)
+## Links
 
-## 📝 [License](https://github.com/modern-python/modern-di-typer/blob/main/LICENSE)
+- [PyPI](https://pypi.org/project/modern-di-typer)
+- [License](https://github.com/modern-python/modern-di-typer/blob/main/LICENSE)
 
 ## Part of `modern-python`
 
