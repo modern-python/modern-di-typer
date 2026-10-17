@@ -10,31 +10,33 @@ from modern_di import Container, Scope, integrations
 
 T = typing.TypeVar("T")
 
-_APP_CONTAINER_KEY: typing.Final = "di_container"
 _COMMAND_CONTAINER_KEY: typing.Final = "modern_di_typer.command_container"
+_CONTEXT_PARAM_NAME: typing.Final = "_modern_di_typer_ctx"
 
 
 FromDI = integrations.from_di
 
 
+class _ContextSettings(dict[str, typing.Any]):
+    app_container: Container
+
+
 def setup_di(app: typer.Typer, container: Container) -> Container:
-    if not app.info.context_settings:
-        app.info.context_settings = {}
-    obj = app.info.context_settings.get("obj") or {}
-    obj[_APP_CONTAINER_KEY] = container
-    app.info.context_settings["obj"] = obj
+    settings = _ContextSettings(app.info.context_settings or {})
+    settings.app_container = container
+    app.info.context_settings = settings
     return container
 
 
 def fetch_di_container(ctx: typer.Context) -> Container:
-    try:
-        return typing.cast(Container, ctx.find_root().command.context_settings["obj"][_APP_CONTAINER_KEY])
-    except (TypeError, KeyError):
-        msg = (
-            "No modern-di container found on the app. "
-            "Call setup_di(app, container) before using @inject or fetch_di_container."
-        )
-        raise RuntimeError(msg) from None
+    settings = ctx.find_root().command.context_settings
+    if isinstance(settings, _ContextSettings):
+        return settings.app_container
+    msg = (
+        "No modern-di container found on the app. "
+        "Call setup_di(app, container) before using @inject or fetch_di_container."
+    )
+    raise RuntimeError(msg)
 
 
 @contextlib.contextmanager
@@ -73,7 +75,7 @@ def inject(func: typing.Callable[..., T]) -> typing.Callable[..., T]:
 
     added_ctx = ctx_param_name is None
     if added_ctx:
-        ctx_param_name = "ctx"
+        ctx_param_name = _CONTEXT_PARAM_NAME
         new_params.insert(
             0,
             inspect.Parameter(ctx_param_name, kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=typer.Context),

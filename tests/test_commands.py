@@ -159,14 +159,11 @@ def test_command_container_never_enters_shared_app_state(app: typer.Typer) -> No
     def cmd(ctx: typer.Context) -> None:
         with action_scope(ctx) as action:
             action.resolve_provider(Dependencies.action_factory)
-        obj_keys.append(set(ctx.obj))
+        obj_keys.append(set(ctx.obj or {}))
 
     result = runner.invoke(app)
     assert result.exit_code == 0, result.output
-    assert obj_keys == [{"di_container"}]
-    context_settings = app.info.context_settings
-    assert context_settings is not None
-    assert set(context_settings["obj"]) == {"di_container"}
+    assert obj_keys == [set()]
 
 
 def test_fetch_di_container(app: typer.Typer) -> None:
@@ -392,3 +389,113 @@ def test_callback_replacing_ctx_obj_keeps_app_container_reachable(app: typer.Typ
     assert received["obj"] is user_state
     assert isinstance(received["instance"], SimpleCreator)
     assert isinstance(received["fetched"], modern_di.Container)
+
+
+def test_inject_on_command_with_option_named_ctx(app: typer.Typer) -> None:
+    runner = CliRunner()
+    received: dict[str, typing.Any] = {}
+
+    @app.command()
+    @inject
+    def cmd(instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)], ctx: str = "default") -> None:
+        received["ctx"] = ctx
+        received["instance"] = instance
+
+    result = runner.invoke(app, ["--ctx", "given"])
+    assert result.exit_code == 0, result.output
+    assert received["ctx"] == "given"
+    assert isinstance(received["instance"], SimpleCreator)
+
+
+def test_inject_keeps_own_context_parameter_under_any_name(app: typer.Typer) -> None:
+    runner = CliRunner()
+    received: dict[str, typing.Any] = {}
+
+    @app.command()
+    @inject
+    def cmd(
+        context: typer.Context,
+        instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)],
+        ctx: str = "default",
+    ) -> None:
+        received["context"] = context
+        received["ctx"] = ctx
+        received["instance"] = instance
+        with action_scope(context) as action:
+            received["action"] = action.resolve_provider(Dependencies.action_factory)
+
+    result = runner.invoke(app, ["--ctx", "given"])
+    assert result.exit_code == 0, result.output
+    assert isinstance(received["context"], typer._click.Context)  # noqa: SLF001
+    assert received["ctx"] == "given"
+    assert isinstance(received["instance"], SimpleCreator)
+    assert isinstance(received["action"], DependentCreator)
+
+
+def test_user_obj_key_named_like_old_container_key_is_left_alone() -> None:
+    runner = CliRunner()
+    app = typer.Typer(context_settings={"obj": {}})
+    received: list[typing.Any] = []
+
+    @app.callback()
+    def callback(ctx: typer.Context) -> None:
+        ctx.obj["di_container"] = "user config"
+
+    @app.command()
+    @inject
+    def cmd(ctx: typer.Context, instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)]) -> None:
+        received.append((ctx.obj["di_container"], instance, modern_di_typer.fetch_di_container(ctx)))
+
+    with modern_di.Container(groups=[Dependencies]) as container:
+        modern_di_typer.setup_di(app, container=container)
+        first = runner.invoke(app, ["cmd"])
+        second = runner.invoke(app, ["cmd"])
+    assert first.exit_code == 0, first.output
+    assert second.exit_code == 0, second.output
+    for user_value, instance, fetched in received:
+        assert user_value == "user config"
+        assert isinstance(instance, SimpleCreator)
+        assert fetched is container
+
+
+def test_setup_di_leaves_user_obj_untouched() -> None:
+    user_obj = {"mine": 1}
+    app = typer.Typer(context_settings={"obj": user_obj, "help_option_names": ["-h"]})
+
+    with modern_di.Container(groups=[Dependencies]) as container:
+        modern_di_typer.setup_di(app, container=container)
+
+    context_settings = app.info.context_settings
+    assert context_settings is not None
+    assert context_settings["obj"] is user_obj
+    assert user_obj == {"mine": 1}
+    assert context_settings["help_option_names"] == ["-h"]
+
+
+def test_setup_di_adds_no_obj_when_user_set_none(app: typer.Typer) -> None:
+    context_settings = app.info.context_settings
+    assert context_settings is not None
+    assert "obj" not in context_settings
+
+
+def test_nested_sub_app_with_option_named_ctx_resolves_from_root_setup_di() -> None:
+    runner = CliRunner()
+    root = typer.Typer()
+    inner = typer.Typer()
+    sub = typer.Typer()
+    received: dict[str, typing.Any] = {}
+
+    @inner.command()
+    @inject
+    def cmd(instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)], ctx: str = "default") -> None:
+        received["ctx"] = ctx
+        received["instance"] = instance
+
+    sub.add_typer(inner, name="inner")
+    root.add_typer(sub, name="sub")
+    with modern_di.Container(groups=[Dependencies]) as container:
+        modern_di_typer.setup_di(root, container=container)
+        result = runner.invoke(root, ["sub", "inner", "cmd", "--ctx", "given"])
+    assert result.exit_code == 0, result.output
+    assert received["ctx"] == "given"
+    assert isinstance(received["instance"], SimpleCreator)
