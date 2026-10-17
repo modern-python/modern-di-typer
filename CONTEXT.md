@@ -11,9 +11,9 @@ docs must agree on it. General programming vocabulary does not belong here, howe
 package uses it.
 
 Two vocabularies meet here and neither is this package's to define. The domain terms are
-`modern-di`'s — `Container`, `Provider`, `Group`, `Scope`, `Resolution`, `Override` — and that
+`modern-di`'s (`Container`, `Provider`, `Group`, `Scope`, `Resolution`, `Override`), and that
 project's `CONTEXT.md` is the authority for every one of them. The CLI terms are Typer's and
-Click's — command, option, argument, callback, context. The three below are this package's own:
+Click's: command, option, argument, callback, context. The three below are this package's own:
 they name the three containers in play during a command, and telling them apart is most of what
 this integration is.
 
@@ -24,12 +24,12 @@ opens one.
 
 **Command container**:
 The `Scope.REQUEST` child built for a single command invocation and closed when the command
-returns — always, whether or not the command declares a `FromDI` parameter.
+returns, whether or not the command declares a `FromDI` parameter.
 _Avoid_: request container. `Scope.REQUEST` is the scope's name, not the container's, and
 "request" in a CLI invites an HTTP request that does not exist here.
 
 **Action container**:
-The `Scope.ACTION` child of the command container that one `action_scope(ctx)` block yields. One
-per block, not one per command: opening several of them within a command — one per item of a
-batch — is the reason `Scope.ACTION` sits below `Scope.REQUEST`
+The `Scope.ACTION` child of the command container that one `action_scope(ctx)` block yields. There
+is one per block, not one per command. Opening several within a command, one per item of a
+batch, is the reason `Scope.ACTION` sits below `Scope.REQUEST`
 ([ADR-0001](docs/adr/0001-action-scope-stays-caller-driven.md)).
