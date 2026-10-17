@@ -295,6 +295,47 @@ def test_action_scope_without_inject_raises_clear_error(app: typer.Typer) -> Non
         runner.invoke(app, catch_exceptions=False)
 
 
+def test_action_scope_without_inject_under_an_injected_callback_raises_clear_error(app: typer.Typer) -> None:
+    runner = CliRunner()
+
+    @app.callback()
+    @inject
+    def callback(instance: typing.Annotated[SimpleCreator, FromDI(SimpleCreator)]) -> None:
+        assert isinstance(instance, SimpleCreator)
+
+    @app.command()
+    def cmd(ctx: typer.Context) -> None:
+        with action_scope(ctx):
+            ...
+
+    with pytest.raises(RuntimeError, match="@inject"):
+        runner.invoke(app, ["cmd"], catch_exceptions=False)
+
+
+def test_action_scope_after_calling_another_injected_function_uses_the_command_container(
+    app: typer.Typer,
+) -> None:
+    runner = CliRunner()
+
+    @inject
+    def helper(ctx: typer.Context) -> None:
+        with action_scope(ctx):
+            ...
+
+    @app.command()
+    @inject
+    def cmd(
+        ctx: typer.Context,
+        own: typing.Annotated[DependentCreator, FromDI(Dependencies.cached_request_factory)],
+    ) -> None:
+        helper(ctx)
+        with action_scope(ctx) as action:
+            assert action.resolve_provider(Dependencies.cached_request_factory) is own
+
+    result = runner.invoke(app, catch_exceptions=False)
+    assert result.exit_code == 0, result.output
+
+
 def test_nested_sub_app_resolves_from_root_setup_di() -> None:
     runner = CliRunner()
     root = typer.Typer()
