@@ -6,13 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `modern-di-typer` wires [`modern-di`](https://github.com/modern-python/modern-di) into
 [Typer](https://typer.tiangolo.com); [`CONTEXT.md`](CONTEXT.md) opens with what it does and owns the
-vocabulary — read it before naming a concept in code, a test name, or an issue title. It is one of
+vocabulary. Read it before naming a concept in code, a test name, or an issue title. It is one of
 modern-di's integrations, each of which lives in a separate repository and ships as a separate PyPI
 package.
 
 ## Commands
 
-`just` (task runner) and `uv` (package manager). The [`justfile`](justfile) is the source of truth —
+`just` (task runner) and `uv` (package manager). The [`justfile`](justfile) is the source of truth:
 `just --list`, or read it.
 
 ## Architecture

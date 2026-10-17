@@ -13,14 +13,14 @@ action-scoped lifetimes within one command, one action per item of a batch. Auto
 single ACTION container per command, so the injected value is one fixed instance for the whole
 command: it removes the multiplicity that is the only reason ACTION sits below REQUEST.
 
-Caller-driven achieves the same deepening goal, `build_child_container()` stops appearing at every
-call site, without changing what ACTION means. Each `with action_scope(ctx)` block is a fresh
+Caller-driven achieves the same deepening goal (`build_child_container()` stops appearing at every
+call site) without changing what ACTION means. Each `with action_scope(ctx)` block is a fresh
 container.
 
 Three sub-decisions were taken with it. The manager is ctx-based, promoting the existing private
 command-container concept rather than introducing a new injection marker for an opener. It yields
-the raw `Container`: `resolve_provider` and `resolve` are `modern-di`'s normal interface and not a
-leak worth hiding, only `build_child_container` was. And the command container is stashed on
+the raw `Container`: `resolve_provider` and `resolve` are `modern-di`'s normal interface, and
+`build_child_container` was the only leak worth hiding. And the command container is stashed on
 `ctx.meta`, which is per-invocation and isolated, rather than `ctx.obj`, which is shared app state.
 
 Revisit when a concrete use case appears where "one action = one command" is the natural model and
