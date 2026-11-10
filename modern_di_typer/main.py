@@ -111,5 +111,5 @@ def inject(func: typing.Callable[..., T]) -> typing.Callable[..., T]:
                 else:
                     ctx.meta[_COMMAND_CONTAINER_KEY] = previous
 
-    wrapper.__signature__ = new_sig  # ty: ignore[unresolved-attribute]
+    wrapper.__signature__ = new_sig  # ty: ignore[missing-attribute]
     return wrapper
